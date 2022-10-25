@@ -1,0 +1,12 @@
+Jonas:
+    - fitness
+    - selection
+    - class for path (one field: path itself, another filed: fitness values)
+
+Simon:
+    - optimize initialization
+    - look into recombination
+
+Julia:
+    - mutation
+    - elimination
