@@ -1,7 +1,7 @@
 Jonas:
     - fitness
     - selection
-    - class for path (one field: path itself, another filed: fitness values)
+    - class for path (one field: path itself, another field: fitness values)
 
 Simon:
     - optimize initialization

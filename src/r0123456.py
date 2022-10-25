@@ -1,10 +1,8 @@
 import Reporter
 import numpy as np
 import sys
-from numpy import random
-from numpy import ndarray
 import random as rn
-import copy
+
 
 # Modify the class name to match your student number.
 class r0123456:
@@ -61,9 +59,9 @@ def computePathFitness(path, distanceMatrix):
 
     fitnessValue = 0
 
-    for i in range(len(path)-1):
+    for i in range(len(path) - 1):
         first = path[i]
-        second = path[i+1]
+        second = path[i + 1]
 
         temp = distanceMatrix[first][second]
 
@@ -80,6 +78,7 @@ def selection(population, distanceMatrix):
     fitnessMap = fitness(sublist, distanceMatrix)
     best = max(fitnessMap.values())
     return best
+
 
 # TODO
 
@@ -126,31 +125,33 @@ def evolutionaryAlgorithm(ksp):
         # Elimination step
         population = elimination(ksp, population, offspring, mu)
 
+
 def createRandomCycle(a, b, dm, pi):
-	if len(pi) > 0:
-		possibleIndices = pi.copy()
-		toBeAddedLater = []
-		while len(possibleIndices) > 0:
-			j = rn.choice(possibleIndices)
-			possibleIndices.remove(j)
-			toBeAddedLater.append(j)
-			while dm[b][j] == np.inf:
-				if len(possibleIndices) <= 0:
-					return None
-				j = rn.choice(possibleIndices)
-				possibleIndices.remove(j)
-				toBeAddedLater.append(j)
-			possibleIndices = possibleIndices + toBeAddedLater
-			possibleIndices.remove(j)
-			path = createRandomCycle(a, j, dm, possibleIndices)
-			if path is not None:
-				path.append(j)
-				return path
-	else:
-		if dm[a][b] != np.inf:
-			return []
-		else:
-			return None
+    if len(pi) > 0:
+        possibleIndices = pi.copy()
+        toBeAddedLater = []
+        while len(possibleIndices) > 0:
+            j = rn.choice(possibleIndices)
+            possibleIndices.remove(j)
+            toBeAddedLater.append(j)
+            while dm[b][j] == np.inf:
+                if len(possibleIndices) <= 0:
+                    return None
+                j = rn.choice(possibleIndices)
+                possibleIndices.remove(j)
+                toBeAddedLater.append(j)
+            possibleIndices = possibleIndices + toBeAddedLater
+            possibleIndices.remove(j)
+            path = createRandomCycle(a, j, dm, possibleIndices)
+            if path is not None:
+                path.append(j)
+                return path
+    else:
+        if dm[a][b] != np.inf:
+            return []
+        else:
+            return None
+
 
 # Test fitness and selection
 file = open('tour50.csv')
@@ -165,10 +166,10 @@ print(fitness(population, distanceMatrix))
 print(selection(population, distanceMatrix))
 
 sys.setrecursionlimit(100000)
-for i in range(0,1000):
-	start = rn.randint(0,len(distanceMatrix)-1)
-	possibleIndices = list(range(0,len(distanceMatrix)))
-	possibleIndices.remove(start)
-	randomCycle = createRandomCycle(start, start, distanceMatrix, possibleIndices)
-	randomCycle.append(start)
-	print(i)
+for i in range(0, 1000):
+    start = rn.randint(0, len(distanceMatrix) - 1)
+    possibleIndices = list(range(0, len(distanceMatrix)))
+    possibleIndices.remove(start)
+    randomCycle = createRandomCycle(start, start, distanceMatrix, possibleIndices)
+    randomCycle.append(start)
+    print(i)
