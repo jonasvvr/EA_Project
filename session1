@@ -16,7 +16,7 @@ Variation:
 crossover then mutation
 
 crossover: keep shared parts in path and complete to obtain hamilton cycle
-mutation: swap 2 cities in path and check for loop  (5 percent prob)
+mutation: swap x cities in path and check for loop  (5 percent prob)
 
 Elimination:
 (λ + μ)-elimination
