@@ -193,23 +193,31 @@ def createRandomCycle(a, b, dm, possibleIndices, SS_dict):
             # Keep looking for a possible extension that is connected to the last vertex.
             while isInfinite(b, j, dm, SS_dict):
                 if len(possibleIndices) <= 0:
+                    for x in toBeAddedLater:
+                        possibleIndices.add(x)
                     return None
                 j = rn.choice(tuple(possibleIndices))
                 possibleIndices.remove(j)
                 toBeAddedLater.add(j)
             possibleIndices = possibleIndices.union(toBeAddedLater)
             possibleIndices.remove(j)
+            toBeAddedLater.add(j)
             path = createRandomCycle(a, j, dm, possibleIndices, SS_dict)
             # A path was found, return it!
             if path is not None:
                 path.append(j)
                 return path
+            else:
+                if len(possibleIndices) == 0:
+                    toBeAddedLater.add(j)
         # No extension possible, return None
+        for x in toBeAddedLater:
+            possibleIndices.add(x)
         return None
     # If all indices have been visited, check if a cycle was found.
     else:
         if not isInfinite(b, a, dm, SS_dict):
-            return []
+            return [a, b]
         else:
             return None
 
@@ -285,22 +293,22 @@ print(selection(population, distanceMatrix))
 
 sys.setrecursionlimit(100000)
 
-for i in range(0, 10):
-    print(i)
+for i in range(0,1000):
     start1 = rn.randint(0, len(distanceMatrix) - 1)
     possibleIndices1 = set(range(0, len(distanceMatrix)))
     possibleIndices1.remove(start1)
-
-    start2 = rn.randint(0, len(distanceMatrix) - 1)
-    possibleIndices2 = set(range(0, len(distanceMatrix)))
-    possibleIndices2.remove(start2)
-
     randomCycle1 = createRandomCycle(start1, start1, distanceMatrix, possibleIndices1, {})
-    randomCycle1.append(start1)
-    randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
-    randomCycle2.append(start2)
-    newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
-    if not isValidHamiltonianCycle(distanceMatrix, newCycle):
+    tmp3 = set(range(0, len(distanceMatrix))) - set(randomCycle1)
+    print(tmp3)
+    randomCycle1.reverse()
+    # start2 = rn.randint(0, len(distanceMatrix) - 1)
+    # possibleIndices2 = set(range(0, len(distanceMatrix)))
+    # possibleIndices2.remove(start2)
+    # randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
+    # randomCycle2.append(start2)
+    # print(len(randomCycle2))
+    # newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
+    if not isValidHamiltonianCycle(distanceMatrix, randomCycle1):
         print("FALSE")
 
 # path1 = [28, 25, 44, 47, 41, 19, 24, 6, 30, 31, 0, 18, 16, 17, 48, 20, 2, 37, 7, 13, 11, 39, 3, 40, 35, 22, 9, 27, 32, 8, 4, 42, 5, 34, 36, 10, 14, 1, 15, 38, 43, 49, 21, 45, 33, 26, 46, 29, 12, 23]
