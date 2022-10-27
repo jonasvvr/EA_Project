@@ -84,9 +84,8 @@ def selection(population, distanceMatrix):
 
 # TODO
 def recombination(dm, path1, path2):
-    print(path1)
-    print(path2)
     allSS = findAllSubsequences(path1, path2)
+    print(allSS)
     possibleIndices = set(range(0, len(distanceMatrix)))
     SS_dict = {}
     for SS in allSS:
@@ -181,43 +180,35 @@ def createRandomCycle(a, b, dm, possibleIndices, SS_dict):
     :return: A cycle if one was found, otherwise return None and move back up in
     the recursion tree.
     """
-
+    alreadyPassed = set()
+    tmpInd = possibleIndices.difference(alreadyPassed)
     # If not all indices have been visited, choose an extension for the current cycle.
-    if len(possibleIndices) > 0:
-        toBeAddedLater = set()
+    if len(tmpInd) > 0:
         # Keep looking for a new indices as an extension for the current cycle.
-        while len(possibleIndices) > 0:
-            j = rn.choice(tuple(possibleIndices))
-            possibleIndices.remove(j)
-            toBeAddedLater.add(j)
+        while len(tmpInd) > 0:
+            j = rn.choice(tuple(tmpInd))
+            tmpInd.remove(j)
+
             # Keep looking for a possible extension that is connected to the last vertex.
             while isInfinite(b, j, dm, SS_dict):
-                if len(possibleIndices) <= 0:
-                    for x in toBeAddedLater:
-                        possibleIndices.add(x)
+                if len(tmpInd) <= 0:
                     return None
-                j = rn.choice(tuple(possibleIndices))
-                possibleIndices.remove(j)
-                toBeAddedLater.add(j)
-            possibleIndices = possibleIndices.union(toBeAddedLater)
+                j = rn.choice(tuple(tmpInd))
+                tmpInd.remove(j)
+
             possibleIndices.remove(j)
-            toBeAddedLater.add(j)
             path = createRandomCycle(a, j, dm, possibleIndices, SS_dict)
+            possibleIndices.add(j)
             # A path was found, return it!
             if path is not None:
                 path.append(j)
                 return path
-            else:
-                if len(possibleIndices) == 0:
-                    toBeAddedLater.add(j)
         # No extension possible, return None
-        for x in toBeAddedLater:
-            possibleIndices.add(x)
         return None
     # If all indices have been visited, check if a cycle was found.
     else:
         if not isInfinite(b, a, dm, SS_dict):
-            return [a, b]
+            return [a]
         else:
             return None
 
@@ -234,6 +225,29 @@ def nxt(i, path):
         return i + 1
     else:
         return 0
+
+
+def appendSS(allSS, SS):
+    if len(SS) > 1:
+        uniqueSS = True
+        sameSS = []
+        k = 0
+        while k < len(SS) and uniqueSS:
+            i = 0
+            while i < len(allSS) and uniqueSS:
+                j = 0
+                while j < len(allSS[i]) and uniqueSS:
+                    if SS[k] == allSS[i][j]:
+                        uniqueSS = False
+                        sameSS = allSS[i]
+                    j += 1
+                i += 1
+            k += 1
+        if uniqueSS:
+            allSS.append(SS)
+        else:
+            if len(sameSS) < len(SS):
+                allSS.append(SS)
 
 
 def findAllSubsequences(path1, path2):
@@ -265,11 +279,12 @@ def findAllSubsequences(path1, path2):
                 SS.append(path1[v1])
             else:
                 stillSS = False
-        if len(SS) > 1:
-            allSS.append(SS)
+        appendSS(allSS, SS)
     return allSS
 
 def isValidHamiltonianCycle(dm, path):
+    if not len(set(path)) == len(dm):
+        return False
     for i in range(0, len(path)):
         if i+1 > len(path)-1:
             if dm[path[i]][path[0]] == np.inf:
@@ -298,16 +313,16 @@ for i in range(0,1000):
     possibleIndices1 = set(range(0, len(distanceMatrix)))
     possibleIndices1.remove(start1)
     randomCycle1 = createRandomCycle(start1, start1, distanceMatrix, possibleIndices1, {})
-    tmp3 = set(range(0, len(distanceMatrix))) - set(randomCycle1)
-    print(tmp3)
     randomCycle1.reverse()
-    # start2 = rn.randint(0, len(distanceMatrix) - 1)
-    # possibleIndices2 = set(range(0, len(distanceMatrix)))
-    # possibleIndices2.remove(start2)
-    # randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
-    # randomCycle2.append(start2)
-    # print(len(randomCycle2))
-    # newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
+
+    start2 = rn.randint(0, len(distanceMatrix) - 1)
+    possibleIndices2 = set(range(0, len(distanceMatrix)))
+    possibleIndices2.remove(start2)
+    randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
+    randomCycle2.reverse()
+
+    newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
+    print(newCycle)
     if not isValidHamiltonianCycle(distanceMatrix, randomCycle1):
         print("FALSE")
 
