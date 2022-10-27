@@ -112,19 +112,69 @@ def recombination(dm, path1, path2):
                 i += 1
     return pathOffspring
 
-# TODO
 
-def mutate(ksp, ind):
-    pass
+def mutate(dm, individual, n=2):
+    """
+    Mutates an individual solution (path) by swapping two (by default) or more
+    indices. If resulted path is no longer a Hamilton cycle the process is repeated
+    until path satisfies conditions of Hamilton cycle.
+
+    :param individual: path of the individual solution
+    :param n: number of nodes to swap
+    :return: mutated path of the individual solution
+    """
+
+    while True:
+        # list containing indexes to swap
+        toSwap = []
+        for i in range(n):
+            randomIndex = rn.randint(0, len(individual) - 1)
+            while randomIndex in toSwap:
+                randomIndex = rn.randint(0, len(individual) - 1)
+            toSwap.append(randomIndex)
+
+        # shuffle list of random indexes
+        swapped = toSwap.copy()
+        rn.shuffle(swapped)
+        # shuffle until the indexes are swapped
+        while toSwap == swapped:
+            rn.shuffle(swapped)
+
+        # dictionary that remembers all values that will be swapped
+        value = {swapped[i]: individual[swapped[i]] for i in range(n)}
+        for i in range(n):
+            individual[toSwap[i]] = value[swapped[i]]
+
+        # check if path is a cycle
+        if isValidHamiltonianCycle(dm, individual):
+            return individual
 
 
-# TODO
+def elimination(dm, population, offspring, mu):
+    """
+    (λ + μ)-elimination based on fitness - mu best solutions are chosen from
+    combined list of individual solutions (population + offspring).
 
-def elimination(kps, population, offspring, mu):
-    pass
+    :param population: list of population individuals
+    :param offspring: list of offspring individuals
+    :param mu: number of solutions left after elimination
+    :return: new population of individual solutions (length of the returned
+    population: mu)
+    """
 
+    # calculate fitness of population and offspring
+    combined = population + offspring
+    fitnessOfAll = fitness(combined, dm)
 
-# TODO
+    # sort individuals by fitness (the smaller the fitness the better the solution)
+    sortedFitness = dict(sorted(fitnessOfAll.items(), key=lambda x: x[1]))
+
+    # select mu individuals
+    selected = list(sortedFitness.keys())[0:mu]
+    newPopulation = list(map(list, selected))
+
+    return newPopulation
+
 
 def evolutionaryAlgorithm(ksp):
     lam = 100
@@ -305,6 +355,7 @@ population = [
 ]
 print(fitness(population, distanceMatrix))
 print(selection(population, distanceMatrix))
+print(mutate(distanceMatrix, population[0], 2))
 
 sys.setrecursionlimit(100000)
 
