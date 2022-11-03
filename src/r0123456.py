@@ -400,17 +400,9 @@ def isValidHamiltonianCycle(dm, path):
     return True
 
 
-# Test fitness and selection
 file = open('tour50.csv')
 distanceMatrix = np.loadtxt(file, delimiter=",")
 file.close()
-
-population = [
-    [0, 1, 2],
-    [0, 1, 3]
-]
-print(fitness(population, distanceMatrix))
-print(selection(population, distanceMatrix))
 
 # # testing initialization
 # print("\nInitialization:")
