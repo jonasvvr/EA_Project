@@ -3,7 +3,7 @@ class hamiltonCycle:
     """
         Store hamilton cycle and its fitness value
     """
-    def __init__(self, path: list, fitness: float):
+    def __init__(self, path: list, fitness: float = 0):
         self.path: tuple = tuple(path)
         self.fitness: float = fitness
 

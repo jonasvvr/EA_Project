@@ -1,11 +1,12 @@
 import time
-
-import Reporter
-import numpy as np
 import sys
 import random as rn
+import numpy as np
 
+import Reporter
 import hamilton_cycle
+from hamilton_cycle import hamiltonCycle
+
 
 # Modify the class name to match your student number.
 class r0123456:
@@ -69,45 +70,63 @@ def initialization(dm, lam=100):
             individualPath = createRandomCycle(start, start, dm, possibleIndices, {})
             if isValidHamiltonianCycle(dm, individualPath):
                 break
-        individualFitness = computePathFitness(individualPath, dm)
+        individualFitness = compute_path_fitness(individualPath, dm)
         individual = hamilton_cycle.hamiltonCycle(individualPath, individualFitness)
         population.append(individual)
 
     return population
 
 
-def fitness(population, distanceMatrix):
-    fitnessMap = {}
-    for path in population:
-        fitnessMap[tuple(path)] = computePathFitness(path, distanceMatrix)
+def fitness(population: [hamiltonCycle], distanceMatrix):
+    """
+    Computes fitness of each cycle in the population
+    :param population: popultation of cycles
+    :param distanceMatrix: matrix with distances between nodes
+    """
+    for cycle in population:
+        if not isinstance(cycle, hamiltonCycle):
+            raise TypeError("The population must be a list of hamilton cycles.")
+        compute_path_fitness(cycle, distanceMatrix)
 
-    return fitnessMap
 
 
-def computePathFitness(path, distanceMatrix):
+def compute_path_fitness(cycle: hamiltonCycle, distanceMatrix):
+    """
+    Computes fitness of a path
+    :param cycle: given cycle
+    :param distanceMatrix: matrix with distances between nodes
+    :return: fitness value of path
+    """
+    path = cycle.getPath()
     if len(path) == 1:
         return 0
 
-    fitnessValue = 0
+    fitness_value = 0
 
     for i in range(len(path) - 1):
         first = path[i]
         second = path[i + 1]
 
-        temp = distanceMatrix[first][second]
+        weight = distanceMatrix[first][second]
 
-        if fitness == np.inf:
+        if weight == np.inf:
             raise Exception("Infinite value in path")
 
-        fitnessValue += temp
+        fitness_value += weight
 
-    return fitnessValue
+    cycle.setFitness(fitness_value)
 
 
 def selection(population, distanceMatrix):
+    """
+    Select cycle from population with k-tournament selection
+    :param population: population of cycles
+    :param distanceMatrix: matrix with distances between nodes
+    :return: The selected cycle
+    """
     sublist = rn.choices(population, k=5)
-    fitnessMap = fitness(sublist, distanceMatrix)
-    best = max(fitnessMap.values())
+    fitness(sublist, distanceMatrix)
+    best = max(cycle.getFitness() for cycle in sublist)
     return best
 
 
@@ -131,7 +150,7 @@ def recombination(dm, path1, path2):
     for key in SS_dict:
         i = pathOffspring.index(key)
         for x in SS_dict[key]:
-            if i > len(pathOffspring)-1:
+            if i > len(pathOffspring) - 1:
                 if not x == pathOffspring[i]:
                     pathOffspring.insert(i, x)
                 i += 1
@@ -177,7 +196,7 @@ def mutate(dm, individual, n=2):
         # check if path is a cycle
         if isValidHamiltonianCycle(dm, path):
             individual.path = tuple(path)
-            individual.fitness = computePathFitness(path, dm)
+            individual.fitness = compute_path_fitness(path, dm)
             return individual
 
 
@@ -249,7 +268,7 @@ def isInfinite(b, j, dm, SS_dict):
     else:
         if j in SS_dict:
             SS = SS_dict[j]
-            return dm[b][SS[len(SS)-1]] == np.inf
+            return dm[b][SS[len(SS) - 1]] == np.inf
         else:
             return dm[b][j] == np.inf
 
@@ -299,10 +318,10 @@ def createRandomCycle(a, b, dm, possibleIndices, SS_dict):
 
 
 def prev(i, path):
-    if i-1 >= 0:
-        return i-1
+    if i - 1 >= 0:
+        return i - 1
     else:
-        return len(path)-1
+        return len(path) - 1
 
 
 def nxt(i, path):
@@ -337,7 +356,7 @@ def appendSS(allSS, SS):
 
 def findAllSubsequences(path1, path2):
     allSS = []
-    for i in range(0, len(path1)-1):
+    for i in range(0, len(path1) - 1):
         j = path2.index(path1[i])
         SS = [path1[i]]
         if i == 0:
@@ -367,15 +386,16 @@ def findAllSubsequences(path1, path2):
         appendSS(allSS, SS)
     return allSS
 
+
 def isValidHamiltonianCycle(dm, path):
     if not len(set(path)) == len(dm):
         return False
     for i in range(0, len(path)):
-        if i+1 > len(path)-1:
+        if i + 1 > len(path) - 1:
             if dm[path[i]][path[0]] == np.inf:
                 return False
         else:
-            if dm[path[i]][path[i+1]] == np.inf:
+            if dm[path[i]][path[i + 1]] == np.inf:
                 return False
     return True
 
@@ -392,33 +412,33 @@ population = [
 print(fitness(population, distanceMatrix))
 print(selection(population, distanceMatrix))
 
-# testing initialization
-print("\nInitialization:")
-p = initialization(distanceMatrix, 5)
-for ind in p:
-    print(ind.fitness, ind.path)
-
-# testing mutation
-print("\nMutation:")
-print(p[0].getFitness(), p[0].getPath())
-p[0] = mutate(distanceMatrix, p[0], 3)
-print(p[0].getFitness(), p[0].getPath())
-
-# testing elimination
-while True:
-    newPath = recombination(distanceMatrix, p[0].getPath(), p[1].getPath())
-    if isValidHamiltonianCycle(distanceMatrix, newPath):
-        break
-newFitness = computePathFitness(newPath, distanceMatrix)
-newInd = hamilton_cycle.hamiltonCycle(newPath, newFitness)
-print("\nNew individual:")
-print(newInd.getFitness(), newInd.getPath())
-afterElimination = elimination(distanceMatrix, p, [newInd], 5)
-print("\nElimination:")
-for ind in afterElimination:
-    print(ind.fitness, ind.path)
-
-sys.setrecursionlimit(100000)
+# # testing initialization
+# print("\nInitialization:")
+# p = initialization(distanceMatrix, 5)
+# for ind in p:
+#     print(ind.fitness, ind.path)
+#
+# # testing mutation
+# print("\nMutation:")
+# print(p[0].getFitness(), p[0].getPath())
+# p[0] = mutate(distanceMatrix, p[0], 3)
+# print(p[0].getFitness(), p[0].getPath())
+#
+# # testing elimination
+# while True:
+#     newPath = recombination(distanceMatrix, p[0].getPath(), p[1].getPath())
+#     if isValidHamiltonianCycle(distanceMatrix, newPath):
+#         break
+# newFitness = computePathFitness(newPath, distanceMatrix)
+# newInd = hamilton_cycle.hamiltonCycle(newPath, newFitness)
+# print("\nNew individual:")
+# print(newInd.getFitness(), newInd.getPath())
+# afterElimination = elimination(distanceMatrix, p, [newInd], 5)
+# print("\nElimination:")
+# for ind in afterElimination:
+#     print(ind.fitness, ind.path)
+#
+# sys.setrecursionlimit(100000)
 
 # for i in range(0,1000):
 #     start1 = rn.randint(0, len(distanceMatrix) - 1)
