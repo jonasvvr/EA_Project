@@ -70,8 +70,8 @@ def initialization(dm, lam=100):
             individualPath = createRandomCycle(start, start, dm, possibleIndices, {})
             if isValidHamiltonianCycle(dm, individualPath):
                 break
-        individualFitness = compute_path_fitness(individualPath, dm)
-        individual = hamilton_cycle.hamiltonCycle(individualPath, individualFitness)
+        individual = hamiltonCycle(individualPath)
+        compute_path_fitness(individual, dm)
         population.append(individual)
 
     return population
@@ -87,7 +87,6 @@ def fitness(population: [hamiltonCycle], distanceMatrix):
         if not isinstance(cycle, hamiltonCycle):
             raise TypeError("The population must be a list of hamilton cycles.")
         compute_path_fitness(cycle, distanceMatrix)
-
 
 
 def compute_path_fitness(cycle: hamiltonCycle, distanceMatrix):
@@ -196,7 +195,7 @@ def mutate(dm, individual, n=2):
         # check if path is a cycle
         if isValidHamiltonianCycle(dm, path):
             individual.path = tuple(path)
-            individual.fitness = compute_path_fitness(path, dm)
+            compute_path_fitness(individual, dm)
             return individual
 
 
@@ -215,17 +214,17 @@ def elimination(dm, population, offspring, mu):
     # calculate fitness of population and offspring
     combined = population + offspring
     combinedPaths = [individual.getPath() for individual in combined]
-    fitnessOfAll = fitness(combinedPaths, dm)
+    fitnessOfAll = ((individual.getPath(), individual.getFitness()) for individual in combined)
 
     # delete old population
     del combined
 
     # sort individuals by fitness (the smaller the fitness the better the solution)
-    sortedFitness = dict(sorted(fitnessOfAll.items(), key=lambda x: x[1]))
+    sortedFitness = sorted(fitnessOfAll, key=lambda x: x[1])
 
     # select mu individuals
-    selected = dict(list(sortedFitness.items())[0:mu])
-    newPopulation = [hamilton_cycle.hamiltonCycle(path, selected[path]) for path in selected.keys()]
+    selected = sortedFitness[0:mu]
+    newPopulation = [hamiltonCycle(individual[0], individual[1]) for individual in selected]
 
     return newPopulation
 
@@ -421,15 +420,17 @@ file.close()
 #     newPath = recombination(distanceMatrix, p[0].getPath(), p[1].getPath())
 #     if isValidHamiltonianCycle(distanceMatrix, newPath):
 #         break
-# newFitness = computePathFitness(newPath, distanceMatrix)
-# newInd = hamilton_cycle.hamiltonCycle(newPath, newFitness)
+# newInd = hamiltonCycle(newPath, 0)
+# compute_path_fitness(newInd, distanceMatrix)
+#
 # print("\nNew individual:")
 # print(newInd.getFitness(), newInd.getPath())
 # afterElimination = elimination(distanceMatrix, p, [newInd], 5)
+#
 # print("\nElimination:")
 # for ind in afterElimination:
 #     print(ind.fitness, ind.path)
-#
+
 # sys.setrecursionlimit(100000)
 
 # for i in range(0,1000):
