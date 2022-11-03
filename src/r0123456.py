@@ -111,7 +111,6 @@ def selection(population, distanceMatrix):
     return best
 
 
-# TODO
 def recombination(dm, path1, path2):
     allSS = findAllSubsequences(path1, path2)
     # print(allSS)
