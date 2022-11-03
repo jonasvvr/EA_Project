@@ -43,12 +43,6 @@ class r0123456:
         return 0
 
 
-class TravellingSalesPersonProblem:
-    def __init__(self, numObjects):
-        pass
-    # TODO
-
-
 def initialization(dm, lam=100):
     """
     Creates a population of random individual solutions (path and
@@ -58,22 +52,21 @@ def initialization(dm, lam=100):
     :param dm: distance matrix
     :param lam: number of individuals to create in population
     :return: list of random lam individual solutions
+    :raises: Exception when a bad hamiltonian path has been created
     """
 
     population = []
     for i in range(0, lam):
         # get a hamilton cycle as a path
-        while True:
-            start = rn.randint(0, len(dm) - 1)
-            possibleIndices = set(range(0, len(dm)))
-            possibleIndices.remove(start)
-            individualPath = createRandomCycle(start, start, dm, possibleIndices, {})
-            if isValidHamiltonianCycle(dm, individualPath):
-                break
+        start = rn.randint(0, len(dm) - 1)
+        possibleIndices = set(range(0, len(dm)))
+        possibleIndices.remove(start)
+        individualPath = createRandomCycle(start, start, dm, possibleIndices, {})
+        if not isValidHamiltonianCycle(dm, individualPath):
+            raise Exception("The returned path was not an HamiltonianCycle")
         individual = hamiltonCycle(individualPath)
         compute_path_fitness(individual, dm)
         population.append(individual)
-
     return population
 
 
@@ -125,38 +118,61 @@ def selection(population, distanceMatrix):
     """
     sublist = rn.choices(population, k=5)
     fitness(sublist, distanceMatrix)
-    best = max(cycle.getFitness() for cycle in sublist)
+    allFitness = [cycle.getFitness() for cycle in sublist]
+    best = sublist[allFitness.index(min(allFitness))]
+    # best = max(cycle.getFitness() for cycle in sublist) <-- this returns a number, not a individual
     return best
 
 
-def recombination(dm, path1, path2):
-    allSS = findAllSubsequences(path1, path2)
-    # print(allSS)
-    possibleIndices = set(range(0, len(distanceMatrix)))
-    SS_dict = {}
-    for SS in allSS:
-        for x in SS:
-            possibleIndices.remove(x)
-        possibleIndices.add(SS[0])
-        SS_dict[SS[0]] = SS
+def recombination(dm, ind1, ind2):
+    """
+    Finds all the common subsequences of two paths and creates a new Hamiltonian Cycle containing said subsequences.
 
-    start = rn.choice(tuple(possibleIndices))
-    possibleIndices.remove(start)
+    It starts by removing all elements of the common subsequences (.1) and it adds the first element of each subsequences(.2). These newly
+    added elements are used as a reference to the full subsequence which is used as key for the subsequence-dictionary.
 
-    pathOffspring = createRandomCycle(start, start, dm, possibleIndices, SS_dict)
-    pathOffspring.append(start)
-    pathOffspring.reverse()
-    for key in SS_dict:
-        i = pathOffspring.index(key)
-        for x in SS_dict[key]:
-            if i > len(pathOffspring) - 1:
-                if not x == pathOffspring[i]:
-                    pathOffspring.insert(i, x)
-                i += 1
-            else:
-                pathOffspring.insert(i, x)
-                i += 1
-    return pathOffspring
+    The cycle algorithm is able to used the dictionary to create full cycles with the subsequences.(.3) After the cycles are found,
+    the element representing the subsequence gets replaced by the subsequence.(.4)
+
+    :param dm: matrix with distances between nodes
+    :param path1: Parent one for recombination
+    :param path2: Parent two for recombination
+    :return: A new Hamiltionian cycle containing all the common subsequences
+    """
+    path1 = ind1.getPath()
+    path2 = ind2.getPath()
+    while True:
+        allSS = findAllSubsequences(path1, path2)
+        possibleIndices = set(range(0, len(distanceMatrix)))
+        SS_dict = {}
+
+        # (.1)
+        for SS in allSS:
+            for x in SS:
+                possibleIndices.remove(x)
+            # (.2)
+            possibleIndices.add(SS[0])
+            SS_dict[SS[0]] = SS
+
+        start = rn.choice(tuple(possibleIndices))   # (.3)
+        possibleIndices.remove(start)
+        pathOffspring = createRandomCycle(start, start, dm, possibleIndices, SS_dict)
+
+        # (.4)
+        for key in SS_dict:
+            i = pathOffspring.index(key)
+            for x in SS_dict[key]:
+                if i > len(pathOffspring) - 1:
+                    if not x == pathOffspring[i]:
+                        pathOffspring.insert(i, x)
+                    i += 1
+                else:
+                    pathOffspring.insert(i+1, x)
+                    i += 1
+        if isValidHamiltonianCycle(dm, pathOffspring):
+            individual = hamiltonCycle(pathOffspring)
+            compute_path_fitness(individual, dm)
+            return individual
 
 
 def mutate(dm, individual, n=2):
@@ -229,47 +245,60 @@ def elimination(dm, population, offspring, mu):
     return newPopulation
 
 
-def evolutionaryAlgorithm(ksp):
+def evolutionaryAlgorithm(dm):
     lam = 100
     mu = 100
-    its = 100
-    # population = [TODO for _ in range(0, lam)]
-
+    its = 10000000
+    population = initialization(dm, lam)
     for i in range(0, its):
         offspring = []
         for j in range(0, mu):
             # Selection step
-            p1 = selection(ksp, population)
-            p2 = selection(ksp, population)
+            p1 = selection(population, dm)
+            p2 = selection(population, dm)
 
             # Recombination step
-            offspring.append(recombination(_, p1, p2))
+            offspring.append(recombination(dm, p1, p2))
 
             # Mutation step
-            mutate(ksp, offspring[j])
-        for ind in population:
+            # mutate(dm, offspring[len(offspring)-1], n=2)
+        # for ind in population:
             # Mutation step
-            mutate(ksp, ind)
+            # mutate(dm, ind, n=2)
 
         # Elimination step
-        population = elimination(ksp, population, offspring, mu)
+        population = elimination(dm, population, offspring, mu)
+        allFitness = [x.getFitness() for x in population]
+        print(i,"Average:", sum(allFitness)/len(allFitness))
+        print(i, "Best:", sum(allFitness) / len(allFitness))
 
 
-def isInfinite(b, j, dm, SS_dict):
-    if b in SS_dict:
-        if j in SS_dict:
-            SS1 = SS_dict[b]
-            SS2 = SS_dict[j]
-            return dm[SS1[0]][SS2[len(SS2) - 1]] == np.inf
+def isInfinite(v1, v2, dm, SS_dict):
+    """
+    Checks if there is a connection between vertices 'v1' and 'v2'. These can both be subsequences.
+
+    :param v1: Vertex one
+    :param v2: Vertex two
+    :param dm: The distance matrix
+    :param SS_dict: The dictionary of all subsequences.
+    :return: Return true if the vertices are connected otherwise false.
+    """
+    if v1 in SS_dict:
+        if v2 in SS_dict:
+            SS1 = SS_dict[v1]
+            end_v1 = SS1[len(SS1) - 1]
+            SS2 = SS_dict[v2]
+            begin_v2 = SS2[0]
+            return dm[end_v1][begin_v2] == np.inf
         else:
-            SS = SS_dict[b]
-            return dm[SS[0]][j] == np.inf
+            SS = SS_dict[v1]
+            return dm[SS[len(SS) - 1]][v2] == np.inf
     else:
-        if j in SS_dict:
-            SS = SS_dict[j]
-            return dm[b][SS[len(SS) - 1]] == np.inf
+        if v2 in SS_dict:
+            SS = SS_dict[v2]
+            return dm[v1][SS[0]] == np.inf
         else:
-            return dm[b][j] == np.inf
+            return dm[v1][v2] == np.inf
 
 
 def createRandomCycle(a, b, dm, possibleIndices, SS_dict):
@@ -304,7 +333,7 @@ def createRandomCycle(a, b, dm, possibleIndices, SS_dict):
             possibleIndices.add(j)
             # A path was found, return it!
             if path is not None:
-                path.append(j)
+                path.insert(0,j)
                 return path
         # No extension possible, return None
         return None
@@ -317,6 +346,9 @@ def createRandomCycle(a, b, dm, possibleIndices, SS_dict):
 
 
 def prev(i, path):
+    """
+    Return the previous element in a cycle.
+    """
     if i - 1 >= 0:
         return i - 1
     else:
@@ -324,6 +356,9 @@ def prev(i, path):
 
 
 def nxt(i, path):
+    """
+     Return the next element in a cycle.
+    """
     if i + 1 < len(path):
         return i + 1
     else:
@@ -331,6 +366,10 @@ def nxt(i, path):
 
 
 def appendSS(allSS, SS):
+    """
+    Helper function that checks if a subsequence is duplicate and longer. It is possible to encounter
+    subsequences of subsequences.
+    """
     if len(SS) > 1:
         uniqueSS = True
         sameSS = []
@@ -354,6 +393,9 @@ def appendSS(allSS, SS):
 
 
 def findAllSubsequences(path1, path2):
+    """
+    Finds all common subseaquences between two paths.
+    """
     allSS = []
     for i in range(0, len(path1) - 1):
         j = path2.index(path1[i])
@@ -387,6 +429,10 @@ def findAllSubsequences(path1, path2):
 
 
 def isValidHamiltonianCycle(dm, path):
+    """
+    Checks if a cycle is a valid hamiltonian cycle by checking the amount of unique elements and
+    it checks if there is a connection between all of them.
+    """
     if not len(set(path)) == len(dm):
         return False
     for i in range(0, len(path)):
@@ -402,6 +448,9 @@ def isValidHamiltonianCycle(dm, path):
 file = open('tour50.csv')
 distanceMatrix = np.loadtxt(file, delimiter=",")
 file.close()
+
+evolutionaryAlgorithm(distanceMatrix)
+
 
 # # testing initialization
 # print("\nInitialization:")
@@ -433,23 +482,18 @@ file.close()
 
 # sys.setrecursionlimit(100000)
 
-# for i in range(0,1000):
+# for i in range(0,10000):
 #     start1 = rn.randint(0, len(distanceMatrix) - 1)
 #     possibleIndices1 = set(range(0, len(distanceMatrix)))
 #     possibleIndices1.remove(start1)
 #     randomCycle1 = createRandomCycle(start1, start1, distanceMatrix, possibleIndices1, {})
-#     randomCycle1.reverse()
 #
 #     start2 = rn.randint(0, len(distanceMatrix) - 1)
 #     possibleIndices2 = set(range(0, len(distanceMatrix)))
 #     possibleIndices2.remove(start2)
 #     randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
-#     randomCycle2.reverse()
-#
 #     newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
-#     print(newCycle)
-#     if not isValidHamiltonianCycle(distanceMatrix, randomCycle1):
-#         print("FALSE")
+
 
 # path1 = [28, 25, 44, 47, 41, 19, 24, 6, 30, 31, 0, 18, 16, 17, 48, 20, 2, 37, 7, 13, 11, 39, 3, 40, 35, 22, 9, 27, 32, 8, 4, 42, 5, 34, 36, 10, 14, 1, 15, 38, 43, 49, 21, 45, 33, 26, 46, 29, 12, 23]
 # path2 = [49, 14, 16, 18, 34, 41, 29, 7, 32, 42, 37, 5, 12, 24, 39, 33, 26, 2, 21, 31, 43, 27, 45, 47, 9, 46, 23, 38, 44, 30, 8, 22, 40, 17, 1, 11, 6, 4, 19, 10, 13, 15, 36, 48, 0, 20, 28, 35, 25, 3]
