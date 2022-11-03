@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import random as rn
 
+import hamilton_cycle
 
 # Modify the class name to match your student number.
 class r0123456:
@@ -47,6 +48,34 @@ class TravellingSalesPersonProblem:
     # TODO
 
 
+def initialization(dm, lam=100):
+    """
+    Creates a population of random individual solutions (path and
+    fitness of the path). Every individual solution is an object
+    of class hamiltonCycle (from hamilton_cycle.py).
+
+    :param dm: distance matrix
+    :param lam: number of individuals to create in population
+    :return: list of random lam individual solutions
+    """
+
+    population = []
+    for i in range(0, lam):
+        # get a hamilton cycle as a path
+        while True:
+            start = rn.randint(0, len(dm) - 1)
+            possibleIndices = set(range(0, len(dm)))
+            possibleIndices.remove(start)
+            individualPath = createRandomCycle(start, start, dm, possibleIndices, {})
+            if isValidHamiltonianCycle(dm, individualPath):
+                break
+        individualFitness = computePathFitness(individualPath, dm)
+        individual = hamilton_cycle.hamiltonCycle(individualPath, individualFitness)
+        population.append(individual)
+
+    return population
+
+
 def fitness(population, distanceMatrix):
     fitnessMap = {}
     for path in population:
@@ -85,7 +114,7 @@ def selection(population, distanceMatrix):
 # TODO
 def recombination(dm, path1, path2):
     allSS = findAllSubsequences(path1, path2)
-    print(allSS)
+    # print(allSS)
     possibleIndices = set(range(0, len(distanceMatrix)))
     SS_dict = {}
     for SS in allSS:
@@ -119,18 +148,19 @@ def mutate(dm, individual, n=2):
     indices. If resulted path is no longer a Hamilton cycle the process is repeated
     until path satisfies conditions of Hamilton cycle.
 
-    :param individual: path of the individual solution
+    :param individual: individual solution (object of class hamiltonCycle)
     :param n: number of nodes to swap
-    :return: mutated path of the individual solution
+    :return: individual solution with mutated path and recalculated fitness
     """
 
+    path = individual.getPath()
     while True:
         # list containing indexes to swap
         toSwap = []
         for i in range(n):
-            randomIndex = rn.randint(0, len(individual) - 1)
+            randomIndex = rn.randint(0, len(path) - 1)
             while randomIndex in toSwap:
-                randomIndex = rn.randint(0, len(individual) - 1)
+                randomIndex = rn.randint(0, len(path) - 1)
             toSwap.append(randomIndex)
 
         # shuffle list of random indexes
@@ -141,12 +171,14 @@ def mutate(dm, individual, n=2):
             rn.shuffle(swapped)
 
         # dictionary that remembers all values that will be swapped
-        value = {swapped[i]: individual[swapped[i]] for i in range(n)}
+        value = {swapped[i]: path[swapped[i]] for i in range(n)}
         for i in range(n):
-            individual[toSwap[i]] = value[swapped[i]]
+            path[toSwap[i]] = value[swapped[i]]
 
         # check if path is a cycle
-        if isValidHamiltonianCycle(dm, individual):
+        if isValidHamiltonianCycle(dm, path):
+            individual.path = tuple(path)
+            individual.fitness = computePathFitness(path, dm)
             return individual
 
 
@@ -164,14 +196,18 @@ def elimination(dm, population, offspring, mu):
 
     # calculate fitness of population and offspring
     combined = population + offspring
-    fitnessOfAll = fitness(combined, dm)
+    combinedPaths = [individual.getPath() for individual in combined]
+    fitnessOfAll = fitness(combinedPaths, dm)
+
+    # delete old population
+    del combined
 
     # sort individuals by fitness (the smaller the fitness the better the solution)
     sortedFitness = dict(sorted(fitnessOfAll.items(), key=lambda x: x[1]))
 
     # select mu individuals
-    selected = list(sortedFitness.keys())[0:mu]
-    newPopulation = list(map(list, selected))
+    selected = dict(list(sortedFitness.items())[0:mu])
+    newPopulation = [hamilton_cycle.hamiltonCycle(path, selected[path]) for path in selected.keys()]
 
     return newPopulation
 
@@ -344,6 +380,7 @@ def isValidHamiltonianCycle(dm, path):
                 return False
     return True
 
+
 # Test fitness and selection
 file = open('tour50.csv')
 distanceMatrix = np.loadtxt(file, delimiter=",")
@@ -355,27 +392,52 @@ population = [
 ]
 print(fitness(population, distanceMatrix))
 print(selection(population, distanceMatrix))
-print(mutate(distanceMatrix, population[0], 2))
+
+# testing initialization
+print("\nInitialization:")
+p = initialization(distanceMatrix, 5)
+for ind in p:
+    print(ind.fitness, ind.path)
+
+# testing mutation
+print("\nMutation:")
+print(p[0].getFitness(), p[0].getPath())
+p[0] = mutate(distanceMatrix, p[0], 3)
+print(p[0].getFitness(), p[0].getPath())
+
+# testing elimination
+while True:
+    newPath = recombination(distanceMatrix, p[0].getPath(), p[1].getPath())
+    if isValidHamiltonianCycle(distanceMatrix, newPath):
+        break
+newFitness = computePathFitness(newPath, distanceMatrix)
+newInd = hamilton_cycle.hamiltonCycle(newPath, newFitness)
+print("\nNew individual:")
+print(newInd.getFitness(), newInd.getPath())
+afterElimination = elimination(distanceMatrix, p, [newInd], 5)
+print("\nElimination:")
+for ind in afterElimination:
+    print(ind.fitness, ind.path)
 
 sys.setrecursionlimit(100000)
 
-for i in range(0,1000):
-    start1 = rn.randint(0, len(distanceMatrix) - 1)
-    possibleIndices1 = set(range(0, len(distanceMatrix)))
-    possibleIndices1.remove(start1)
-    randomCycle1 = createRandomCycle(start1, start1, distanceMatrix, possibleIndices1, {})
-    randomCycle1.reverse()
-
-    start2 = rn.randint(0, len(distanceMatrix) - 1)
-    possibleIndices2 = set(range(0, len(distanceMatrix)))
-    possibleIndices2.remove(start2)
-    randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
-    randomCycle2.reverse()
-
-    newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
-    print(newCycle)
-    if not isValidHamiltonianCycle(distanceMatrix, randomCycle1):
-        print("FALSE")
+# for i in range(0,1000):
+#     start1 = rn.randint(0, len(distanceMatrix) - 1)
+#     possibleIndices1 = set(range(0, len(distanceMatrix)))
+#     possibleIndices1.remove(start1)
+#     randomCycle1 = createRandomCycle(start1, start1, distanceMatrix, possibleIndices1, {})
+#     randomCycle1.reverse()
+#
+#     start2 = rn.randint(0, len(distanceMatrix) - 1)
+#     possibleIndices2 = set(range(0, len(distanceMatrix)))
+#     possibleIndices2.remove(start2)
+#     randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
+#     randomCycle2.reverse()
+#
+#     newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
+#     print(newCycle)
+#     if not isValidHamiltonianCycle(distanceMatrix, randomCycle1):
+#         print("FALSE")
 
 # path1 = [28, 25, 44, 47, 41, 19, 24, 6, 30, 31, 0, 18, 16, 17, 48, 20, 2, 37, 7, 13, 11, 39, 3, 40, 35, 22, 9, 27, 32, 8, 4, 42, 5, 34, 36, 10, 14, 1, 15, 38, 43, 49, 21, 45, 33, 26, 46, 29, 12, 23]
 # path2 = [49, 14, 16, 18, 34, 41, 29, 7, 32, 42, 37, 5, 12, 24, 39, 33, 26, 2, 21, 31, 43, 27, 45, 47, 9, 46, 23, 38, 44, 30, 8, 22, 40, 17, 1, 11, 6, 4, 19, 10, 13, 15, 36, 48, 0, 20, 28, 35, 25, 3]
