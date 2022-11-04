@@ -446,7 +446,7 @@ file = open('tour50.csv')
 distanceMatrix = np.loadtxt(file, delimiter=",")
 file.close()
 
-evolutionaryAlgorithm(distanceMatrix)
+# evolutionaryAlgorithm(distanceMatrix)
 
 
 # # testing initialization
