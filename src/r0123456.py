@@ -226,7 +226,6 @@ def elimination(dm, population, offspring, mu):
 
     # calculate fitness of population and offspring
     combined = population + offspring
-    combinedPaths = [individual.getPath() for individual in combined]
     fitnessOfAll = ((individual.getPath(), individual.getFitness()) for individual in combined)
 
     # delete old population
