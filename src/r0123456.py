@@ -109,18 +109,15 @@ def compute_path_fitness(cycle: hamiltonCycle, distanceMatrix):
     cycle.setFitness(fitness_value)
 
 
-def selection(population, distanceMatrix):
+def selection(population):
     """
     Select cycle from population with k-tournament selection
     :param population: population of cycles
-    :param distanceMatrix: matrix with distances between nodes
     :return: The selected cycle
     """
     sublist = rn.choices(population, k=5)
-    fitness(sublist, distanceMatrix)
-    allFitness = [cycle.getFitness() for cycle in sublist]
-    best = sublist[allFitness.index(min(allFitness))]
-    # best = max(cycle.getFitness() for cycle in sublist) <-- this returns a number, not a individual
+    all_fitness = [cycle.getFitness() for cycle in sublist]
+    best = sublist[all_fitness.index(min(all_fitness))]
     return best
 
 
