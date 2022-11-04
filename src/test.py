@@ -24,10 +24,10 @@ class TestEA(unittest.TestCase):
         self.assertEqual(cycle2.getFitness(), 16138.9)
 
     def test_selection(self):
-        cycle1 = hamiltonCycle([0, 1, 2])
-        cycle2 = hamiltonCycle([0, 1, 3])
+        cycle1 = hamiltonCycle([0, 1, 2], 100)
+        cycle2 = hamiltonCycle([0, 1, 3], 1000)
         population = [
             cycle1,
             cycle2
         ]
-        self.assertEqual(ea.selection(population, distanceMatrix), 26361.0)
+        self.assertEqual(ea.selection(population), cycle1)
