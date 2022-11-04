@@ -146,7 +146,11 @@ def recombination(dm, ind1, ind2):
         # (.1)
         for SS in allSS:
             for x in SS:
-                possibleIndices.remove(x)
+                try:
+                    possibleIndices.remove(x)
+                except KeyError:
+                    print(SS, allSS)
+                    raise Exception("kut")
             # (.2)
             possibleIndices.add(SS[0])
             SS_dict[SS[0]] = SS
@@ -159,13 +163,9 @@ def recombination(dm, ind1, ind2):
         for key in SS_dict:
             i = pathOffspring.index(key)
             for x in SS_dict[key]:
-                if i > len(pathOffspring) - 1:
-                    if not x == pathOffspring[i]:
-                        pathOffspring.insert(i, x)
-                    i += 1
-                else:
+                if not key == x:
                     pathOffspring.insert(i+1, x)
-                    i += 1
+                i += 1
         if isValidHamiltonianCycle(dm, pathOffspring):
             individual = hamiltonCycle(pathOffspring)
             compute_path_fitness(individual, dm)
@@ -244,7 +244,7 @@ def elimination(dm, population, offspring, mu):
 def evolutionaryAlgorithm(dm):
     lam = 100
     mu = 10
-    its = 1000
+    its = 1000000
     population = initialization(dm, lam)
     for i in range(0, its):
         offspring = []
@@ -265,9 +265,9 @@ def evolutionaryAlgorithm(dm):
         # Elimination step
         population = elimination(dm, population, offspring, mu)
         allFitness = [x.getFitness() for x in population]
-        if i % 10 == 0:
+        if i % 1 == 0:
             print(i, "Average:", sum(allFitness)/len(allFitness))
-            print(i, "Best:", sum(allFitness) / len(allFitness))
+            print(i, "Best:", min(allFitness))
 
 
 def isInfinite(v1, v2, dm, SS_dict):
@@ -342,24 +342,15 @@ def createRandomCycle(a, b, dm, possibleIndices, SS_dict):
             return None
 
 
-def prev(i, path):
-    """
-    Return the previous element in a cycle.
-    """
-    if i - 1 >= 0:
-        return i - 1
-    else:
-        return len(path) - 1
-
-
 def nxt(i, path):
     """
      Return the next element in a cycle.
     """
-    if i + 1 < len(path):
-        return i + 1
-    else:
+    new_i = i+1
+    if new_i > len(path)-1:
         return 0
+    else:
+        return new_i
 
 
 def appendSS(allSS, SS):
@@ -367,26 +358,13 @@ def appendSS(allSS, SS):
     Helper function that checks if a subsequence is duplicate and longer. It is possible to encounter
     subsequences of subsequences.
     """
-    if len(SS) > 1:
-        uniqueSS = True
-        sameSS = []
-        k = 0
-        while k < len(SS) and uniqueSS:
-            i = 0
-            while i < len(allSS) and uniqueSS:
-                j = 0
-                while j < len(allSS[i]) and uniqueSS:
-                    if SS[k] == allSS[i][j]:
-                        uniqueSS = False
-                        sameSS = allSS[i]
-                    j += 1
-                i += 1
-            k += 1
-        if uniqueSS:
-            allSS.append(SS)
-        else:
-            if len(sameSS) < len(SS):
-                allSS.append(SS)
+    if len(SS) > 1 and len(allSS) > 0:
+        for x in SS:
+            for diff_SS in allSS:
+                if x in diff_SS:
+                    if len(SS) > len(diff_SS):
+                        allSS.append(SS)
+                    return
 
 
 def findAllSubsequences(path1, path2):
@@ -396,29 +374,17 @@ def findAllSubsequences(path1, path2):
     allSS = []
     for i in range(0, len(path1) - 1):
         j = path2.index(path1[i])
-        SS = [path1[i]]
-        if i == 0:
-            stillSS = True
-            tmp_i = i
-            tmp_j = j
-            while stillSS:
-                v1 = prev(tmp_i, path1)
-                v2 = prev(tmp_j, path1)
-                if path1[v1] == path2[v2]:
-                    tmp_i = v1
-                    tmp_j = v2
-                    SS.append(path1[v1])
-                else:
-                    stillSS = False
-            SS.reverse()
+        SS = []
         stillSS = True
-        while stillSS:
+        len_ss = 0
+        while stillSS and len_ss < len(path1) - 1:
             v1 = nxt(i, path1)
             v2 = nxt(j, path2)
-            if path1[v1] == path2[v2]:
+            if path1[i] == path2[j]:
+                SS.append(path1[i])
                 i = v1
                 j = v2
-                SS.append(path1[v1])
+                len_ss += 1
             else:
                 stillSS = False
         appendSS(allSS, SS)
@@ -430,7 +396,7 @@ def isValidHamiltonianCycle(dm, path):
     Checks if a cycle is a valid hamiltonian cycle by checking the amount of unique elements and
     it checks if there is a connection between all of them.
     """
-    if not len(set(path)) == len(dm):
+    if not len(path) == len(dm):
         return False
     for i in range(0, len(path)):
         if i + 1 > len(path) - 1:
@@ -442,11 +408,11 @@ def isValidHamiltonianCycle(dm, path):
     return True
 
 
-file = open('tour50.csv')
+file = open('tour1000.csv')
 distanceMatrix = np.loadtxt(file, delimiter=",")
 file.close()
-
-# evolutionaryAlgorithm(distanceMatrix)
+sys.setrecursionlimit(100000)
+evolutionaryAlgorithm(distanceMatrix)
 
 
 # # testing initialization
