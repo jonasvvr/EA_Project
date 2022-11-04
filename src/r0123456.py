@@ -244,15 +244,15 @@ def elimination(dm, population, offspring, mu):
 
 def evolutionaryAlgorithm(dm):
     lam = 100
-    mu = 100
-    its = 10000000
+    mu = 10
+    its = 1000
     population = initialization(dm, lam)
     for i in range(0, its):
         offspring = []
         for j in range(0, mu):
             # Selection step
-            p1 = selection(population, dm)
-            p2 = selection(population, dm)
+            p1 = selection(population)
+            p2 = selection(population)
 
             # Recombination step
             offspring.append(recombination(dm, p1, p2))
@@ -266,8 +266,9 @@ def evolutionaryAlgorithm(dm):
         # Elimination step
         population = elimination(dm, population, offspring, mu)
         allFitness = [x.getFitness() for x in population]
-        print(i,"Average:", sum(allFitness)/len(allFitness))
-        print(i, "Best:", sum(allFitness) / len(allFitness))
+        if i % 10 == 0:
+            print(i, "Average:", sum(allFitness)/len(allFitness))
+            print(i, "Best:", sum(allFitness) / len(allFitness))
 
 
 def isInfinite(v1, v2, dm, SS_dict):
