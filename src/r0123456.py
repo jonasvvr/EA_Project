@@ -142,7 +142,6 @@ def recombination(dm, ind1, ind2):
         allSS = findAllSubsequences(path1, path2)
         possibleIndices = set(range(0, len(distanceMatrix)))
         SS_dict = {}
-
         # (.1)
         for SS in allSS:
             for x in SS:
@@ -154,7 +153,6 @@ def recombination(dm, ind1, ind2):
         start = rn.choice(tuple(possibleIndices))   # (.3)
         possibleIndices.remove(start)
         pathOffspring = createRandomCycle(start, start, dm, possibleIndices, SS_dict)
-
         # (.4)
         for key in SS_dict:
             i = pathOffspring.index(key)
@@ -166,6 +164,7 @@ def recombination(dm, ind1, ind2):
                 else:
                     pathOffspring.insert(i+1, x)
                     i += 1
+
         if isValidHamiltonianCycle(dm, pathOffspring):
             individual = hamiltonCycle(pathOffspring)
             compute_path_fitness(individual, dm)
@@ -245,24 +244,21 @@ def elimination(dm, population, offspring, mu):
 def evolutionaryAlgorithm(dm):
     lam = 100
     mu = 100
-    its = 10000000
+    its = 10
     population = initialization(dm, lam)
     for i in range(0, its):
         offspring = []
         for j in range(0, mu):
             # Selection step
-            p1 = selection(population, dm)
-            p2 = selection(population, dm)
-
+            p1 = selection(population)
+            p2 = selection(population)
             # Recombination step
             offspring.append(recombination(dm, p1, p2))
-
             # Mutation step
             # mutate(dm, offspring[len(offspring)-1], n=2)
         # for ind in population:
             # Mutation step
             # mutate(dm, ind, n=2)
-
         # Elimination step
         population = elimination(dm, population, offspring, mu)
         allFitness = [x.getFitness() for x in population]
@@ -397,28 +393,19 @@ def findAllSubsequences(path1, path2):
     for i in range(0, len(path1) - 1):
         j = path2.index(path1[i])
         SS = [path1[i]]
-        if i == 0:
-            stillSS = True
-            tmp_i = i
-            tmp_j = j
-            while stillSS:
-                v1 = prev(tmp_i, path1)
-                v2 = prev(tmp_j, path1)
-                if path1[v1] == path2[v2]:
-                    tmp_i = v1
-                    tmp_j = v2
-                    SS.append(path1[v1])
-                else:
-                    stillSS = False
-            SS.reverse()
         stillSS = True
+        len_ss = 0
         while stillSS:
+            if len_ss >= len(path1)-1:
+                break
+            len_ss += 1
             v1 = nxt(i, path1)
             v2 = nxt(j, path2)
             if path1[v1] == path2[v2]:
                 i = v1
                 j = v2
-                SS.append(path1[v1])
+                if not path1[v1] in SS:
+                    SS.append(path1[v1])
             else:
                 stillSS = False
         appendSS(allSS, SS)
