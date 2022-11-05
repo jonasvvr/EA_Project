@@ -2,9 +2,8 @@ import time
 import sys
 import random as rn
 import numpy as np
-
 import Reporter
-from hamilton_cycle import hamiltonCycle
+from hamilton_cycle import hamiltonCycle, findAllSubsequences, createRandomCycle, isValidHamiltonianCycle
 
 
 # Modify the class name to match your student number.
@@ -50,7 +49,7 @@ class r0123456:
             # bestSolution = population[all_fitness.index(bestObjective)].getPath()
             bestSolution = np.array([1, 2, 3, 4])
 
-            if i % 100 == 0:
+            if i % 1 == 0:
                 print(i, "Average:", meanObjective)
                 print(i, "Best:", bestObjective)
 
@@ -65,35 +64,6 @@ class r0123456:
 
         # Your code here.
         return 0
-
-
-    #
-    # def evolutionaryAlgorithm(dm):
-    #     population = initialization(dm, lam)
-    #     for i in range(0, its):
-    #         offspring = []
-    #         for j in range(0, mu):
-    #             # Selection step
-    #             p1 = selection(population)
-    #             p2 = selection(population)
-    #
-    #             # Recombination step
-    #             offspring.append(recombination(dm, p1, p2))
-    #
-    #             # Mutation step
-    #             if isMutated(0.1):
-    #                 mutate(dm, offspring[len(offspring) - 1], toMutate, mutationTries)
-    #         for ind in population:
-    #             # Mutation step
-    #             if isMutated(0.1):
-    #                 mutate(dm, ind, toMutate, mutationTries)
-    #
-    #         # Elimination step
-    #         population = elimination(population, offspring, lam)
-    #         allFitness = [x.getFitness() for x in population]
-    #         if i % 100 == 0:
-    #             print(i, "Average:", sum(allFitness) / len(allFitness))
-    #             print(i, "Best:", min(allFitness))
 
 
 class evolutionaryAlgorithm:
@@ -125,8 +95,8 @@ class evolutionaryAlgorithm:
             start = rn.randint(0, len(self.dm) - 1)
             possibleIndices = set(range(0, len(self.dm)))
             possibleIndices.remove(start)
-            individualPath = self.createRandomCycle(start, start, possibleIndices, {})
-            if not self.isValidHamiltonianCycle(individualPath):
+            individualPath = createRandomCycle(self.dm, start, start, possibleIndices, {})
+            if not  isValidHamiltonianCycle(self.dm, individualPath):
                 raise Exception("The returned path was not an HamiltonianCycle")
             individual = hamiltonCycle(individualPath)
             self.compute_path_fitness(individual)
@@ -197,25 +167,21 @@ class evolutionaryAlgorithm:
         path1 = ind1.getPath()
         path2 = ind2.getPath()
         while True:
-            allSS = self.findAllSubsequences(path1, path2)
+            allSS = findAllSubsequences(path1, path2)
             possibleIndices = set(range(0, len(self.dm)))
             SS_dict = {}
 
             # (.1)
             for SS in allSS:
                 for x in SS:
-                    try:
-                        possibleIndices.remove(x)
-                    except KeyError:
-                        print(SS, allSS)
-                        raise Exception("kut")
+                    possibleIndices.remove(x)
                 # (.2)
                 possibleIndices.add(SS[0])
                 SS_dict[SS[0]] = SS
 
             start = rn.choice(tuple(possibleIndices))  # (.3)
             possibleIndices.remove(start)
-            pathOffspring = self.createRandomCycle(start, start, possibleIndices, SS_dict)
+            pathOffspring = createRandomCycle(self.dm, start, start, possibleIndices, SS_dict)
 
             # (.4)
             for key in SS_dict:
@@ -224,7 +190,8 @@ class evolutionaryAlgorithm:
                     if not key == x:
                         pathOffspring.insert(i + 1, x)
                     i += 1
-            if self.isValidHamiltonianCycle(pathOffspring):
+
+            if isValidHamiltonianCycle(self.dm, pathOffspring):
                 individual = hamiltonCycle(pathOffspring)
                 self.compute_path_fitness(individual)
                 return individual
@@ -264,7 +231,7 @@ class evolutionaryAlgorithm:
                 path[toSwap[i]] = value[swapped[i]]
 
             # check if path is a cycle
-            if self.isValidHamiltonianCycle(path):
+            if isValidHamiltonianCycle(self.dm, path):
                 individual.path = tuple(path)
                 self.compute_path_fitness(individual)
                 return individual
@@ -308,135 +275,6 @@ class evolutionaryAlgorithm:
 
         return newPopulation
 
-    def isInfinite(self, v1, v2, SS_dict):
-        """
-        Checks if there is a connection between vertices 'v1' and 'v2'. These can both be subsequences.
-
-        :param v1: Vertex one
-        :param v2: Vertex two
-        :param SS_dict: The dictionary of all subsequences.
-        :return: Return true if the vertices are connected otherwise false.
-        """
-        if v1 in SS_dict:
-            if v2 in SS_dict:
-                SS1 = SS_dict[v1]
-                end_v1 = SS1[len(SS1) - 1]
-                SS2 = SS_dict[v2]
-                begin_v2 = SS2[0]
-                return self.dm[end_v1][begin_v2] == np.inf
-            else:
-                SS = SS_dict[v1]
-                return self.dm[SS[len(SS) - 1]][v2] == np.inf
-        else:
-            if v2 in SS_dict:
-                SS = SS_dict[v2]
-                return self.dm[v1][SS[0]] == np.inf
-            else:
-                return self.dm[v1][v2] == np.inf
-
-    def createRandomCycle(self, a, b, possibleIndices, SS_dict):
-        """
-        Completes a random cycle, starting from element b
-
-        :param a: The first element of the cycle (or path)
-        :param b: The last element of the cycle (or path)
-        :param possibleIndices: All possible indices that haven't been visited yet
-        :return: A cycle if one was found, otherwise return None and move back up in
-        the recursion tree.
-        """
-        alreadyPassed = set()
-        tmpInd = possibleIndices.difference(alreadyPassed)
-        # If not all indices have been visited, choose an extension for the current cycle.
-        if len(tmpInd) > 0:
-            # Keep looking for a new indices as an extension for the current cycle.
-            while len(tmpInd) > 0:
-                j = rn.choice(tuple(tmpInd))
-                tmpInd.remove(j)
-
-                # Keep looking for a possible extension that is connected to the last vertex.
-                while self.isInfinite(b, j, SS_dict):
-                    if len(tmpInd) <= 0:
-                        return None
-                    j = rn.choice(tuple(tmpInd))
-                    tmpInd.remove(j)
-
-                possibleIndices.remove(j)
-                path = self.createRandomCycle(a, j, possibleIndices, SS_dict)
-                possibleIndices.add(j)
-                # A path was found, return it!
-                if path is not None:
-                    path.insert(0, j)
-                    return path
-            # No extension possible, return None
-            return None
-        # If all indices have been visited, check if a cycle was found.
-        else:
-            if not self.isInfinite(b, a, SS_dict):
-                return [a]
-            else:
-                return None
-
-    def nxt(self, i, path):
-        """
-         Return the next element in a cycle.
-        """
-        new_i = i + 1
-        if new_i > len(path) - 1:
-            return 0
-        else:
-            return new_i
-
-    def appendSS(self, allSS, SS):
-        """
-        Helper function that checks if a subsequence is duplicate and longer. It is possible to encounter
-        subsequences of subsequences.
-        """
-        if len(SS) > 1 and len(allSS) > 0:
-            for x in SS:
-                for diff_SS in allSS:
-                    if x in diff_SS:
-                        if len(SS) > len(diff_SS):
-                            allSS.append(SS)
-                        return
-
-    def findAllSubsequences(self, path1, path2):
-        """
-        Finds all common subseaquences between two paths.
-        """
-        allSS = []
-        for i in range(0, len(path1) - 1):
-            j = path2.index(path1[i])
-            SS = []
-            stillSS = True
-            len_ss = 0
-            while stillSS and len_ss < len(path1) - 1:
-                v1 = self.nxt(i, path1)
-                v2 = self.nxt(j, path2)
-                if path1[i] == path2[j]:
-                    SS.append(path1[i])
-                    i = v1
-                    j = v2
-                    len_ss += 1
-                else:
-                    stillSS = False
-            self.appendSS(allSS, SS)
-        return allSS
-
-    def isValidHamiltonianCycle(self, path):
-        """
-        Checks if a cycle is a valid hamiltonian cycle by checking the amount of unique elements and
-        it checks if there is a connection between all of them.
-        """
-        if not len(path) == len(self.dm):
-            return False
-        for i in range(0, len(path)):
-            if i + 1 > len(path) - 1:
-                if self.dm[path[i]][path[0]] == np.inf:
-                    return False
-            else:
-                if self.dm[path[i]][path[i + 1]] == np.inf:
-                    return False
-        return True
 
 
 sys.setrecursionlimit(100000)
