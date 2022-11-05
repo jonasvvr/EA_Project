@@ -155,13 +155,14 @@ class evolutionaryAlgorithm:
 
         It starts by removing all elements of the common subsequences (.1)
         and it adds the first element of each subsequences(.2). These newly
-        added elements are used as a reference to the full subsequence which is used as key for the subsequence-dictionary.
+        added elements are used as a reference to the full subsequence
+        which is used as key for the subsequence-dictionary.
 
-        The cycle algorithm is able to used the dictionary to create full cycles with the subsequences.(.3) After the cycles are found,
-        the element representing the subsequence gets replaced by the subsequence.(.4)
+        The cycle algorithm is able to used the dictionary to create full cycles with the subsequences.(.3)
+        After the cycles are found, the element representing the subsequence gets replaced by the subsequence.(.4)
 
-        :param path1: Parent one for recombination
-        :param path2: Parent two for recombination
+        :param ind1: Parent one for recombination
+        :param ind2: Parent two for recombination
         :return: A new Hamiltionian cycle containing all the common subsequences
         """
         path1 = ind1.getPath()
@@ -242,7 +243,6 @@ class evolutionaryAlgorithm:
         Decides if individual will be mutated. Chance of mutation is defined with parameter alph
         which is set to 0.05 (5%) by default.
 
-        :param alph: probability of mutation (float number between 0 and 1)
         :return: True if individual is to be mutated, False otherwise
         """
         p = rn.random()
