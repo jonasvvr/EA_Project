@@ -2,13 +2,15 @@ import unittest
 
 import numpy as np
 
-import r0123456 as ea
+from r0123456 import evolutionaryAlgorithm
 from hamilton_cycle import hamiltonCycle
 
 
 file = open('tour50.csv')
 distanceMatrix = np.loadtxt(file, delimiter=",")
 file.close()
+
+ea = evolutionaryAlgorithm(distanceMatrix)
 
 class TestEA(unittest.TestCase):
 
@@ -19,7 +21,7 @@ class TestEA(unittest.TestCase):
             cycle1,
             cycle2
         ]
-        ea.fitness(population, distanceMatrix)
+        ea.fitness(population)
         self.assertEqual(cycle1.getFitness(), 26361.0)
         self.assertEqual(cycle2.getFitness(), 16138.9)
 
