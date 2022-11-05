@@ -49,7 +49,7 @@ class r0123456:
             # bestSolution = population[all_fitness.index(bestObjective)].getPath() TODO
             bestSolution = np.array([1, 2, 3, 4])
 
-            if i % 1 == 0:
+            if i % 100 == 0:
                 print(i, "Average:", meanObjective)
                 print(i, "Best:", bestObjective)
 
@@ -279,4 +279,4 @@ class evolutionaryAlgorithm:
 
 sys.setrecursionlimit(100000)
 ea = r0123456()
-ea.optimize('./data/tour50.csv')
+ea.optimize('tour50.csv')
