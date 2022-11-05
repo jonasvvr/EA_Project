@@ -146,11 +146,7 @@ def recombination(dm, ind1, ind2):
         # (.1)
         for SS in allSS:
             for x in SS:
-                try:
-                    possibleIndices.remove(x)
-                except KeyError:
-                    print(SS, allSS)
-                    raise Exception("kut")
+                possibleIndices.remove(x)
             # (.2)
             possibleIndices.add(SS[0])
             SS_dict[SS[0]] = SS
@@ -166,6 +162,7 @@ def recombination(dm, ind1, ind2):
                 if not key == x:
                     pathOffspring.insert(i+1, x)
                 i += 1
+
         if isValidHamiltonianCycle(dm, pathOffspring):
             individual = hamiltonCycle(pathOffspring)
             compute_path_fitness(individual, dm)
