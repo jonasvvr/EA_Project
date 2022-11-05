@@ -4,7 +4,6 @@ import random as rn
 import numpy as np
 
 import Reporter
-import hamilton_cycle
 from hamilton_cycle import hamiltonCycle
 
 
@@ -212,16 +211,16 @@ def mutate(dm, individual, n=2):
             return individual
 
 
-def elimination(dm, population, offspring, mu):
+def elimination(population, offspring, lam):
     """
-    (λ + μ)-elimination based on fitness - mu best solutions are chosen from
+    (λ + μ)-elimination based on fitness - lam best solutions are chosen from
     combined list of individual solutions (population + offspring).
 
     :param population: list of population individuals
     :param offspring: list of offspring individuals
-    :param mu: number of solutions left after elimination
+    :param lam: number of solutions left after elimination
     :return: new population of individual solutions (length of the returned
-    population: mu)
+    population: lam)
     """
 
     # calculate fitness of population and offspring
@@ -235,7 +234,7 @@ def elimination(dm, population, offspring, mu):
     sortedFitness = sorted(fitnessOfAll, key=lambda x: x[1])
 
     # select mu individuals
-    selected = sortedFitness[0:mu]
+    selected = sortedFitness[0:lam]
     newPopulation = [hamiltonCycle(individual[0], individual[1]) for individual in selected]
 
     return newPopulation
@@ -263,7 +262,7 @@ def evolutionaryAlgorithm(dm):
             # mutate(dm, ind, n=2)
 
         # Elimination step
-        population = elimination(dm, population, offspring, mu)
+        population = elimination(population, offspring, lam)
         allFitness = [x.getFitness() for x in population]
         if i % 1 == 0:
             print(i, "Average:", sum(allFitness)/len(allFitness))
