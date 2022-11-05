@@ -171,19 +171,23 @@ def recombination(dm, ind1, ind2):
             return individual
 
 
-def mutate(dm, individual, n=2):
+def mutate(dm, individual, n=2, tries=10):
     """
     Mutates an individual solution (path) by swapping two (by default) or more
-    indices. If resulted path is no longer a Hamilton cycle the process is repeated
-    until path satisfies conditions of Hamilton cycle.
+    indices. If resulted path is no longer a Hamiltonian cycle the process is repeated
+    until path satisfies conditions of Hamiltonian cycle. It's not possible to mutate
+    some paths in a way they can still be a Hamiltonian therefore, number of mutation
+    tries is specified as a parameter.
 
+    :param dm: distance matrix
     :param individual: individual solution (object of class hamiltonCycle)
     :param n: number of nodes to swap
+    :param tries: number of max attempts to mutate the path
     :return: individual solution with mutated path and recalculated fitness
     """
 
     path = individual.getPath()
-    while True:
+    for t in range(0, tries):
         # list containing indexes to swap
         toSwap = []
         for i in range(n):
@@ -209,6 +213,19 @@ def mutate(dm, individual, n=2):
             individual.path = tuple(path)
             compute_path_fitness(individual, dm)
             return individual
+    return individual
+
+
+def isMutated(alph=0.05):
+    """
+    Decides if individual will be mutated. Chance of mutation is defined with parameter alph
+    which is set to 0.05 (5%) by default.
+
+    :param alph: probability of mutation (float number between 0 and 1)
+    :return: True if individual is to be mutated, False otherwise
+    """
+    p = rn.random()
+    return p <= alph
 
 
 def elimination(population, offspring, lam):
@@ -243,7 +260,9 @@ def elimination(population, offspring, lam):
 def evolutionaryAlgorithm(dm):
     lam = 100
     mu = 10
-    its = 1000000
+    its = 1000
+    toMutate = 3
+    mutationTries = 20
     population = initialization(dm, lam)
     for i in range(0, its):
         offspring = []
@@ -256,15 +275,17 @@ def evolutionaryAlgorithm(dm):
             offspring.append(recombination(dm, p1, p2))
 
             # Mutation step
-            # mutate(dm, offspring[len(offspring)-1], n=2)
-        # for ind in population:
+            if isMutated(0.1):
+                mutate(dm, offspring[len(offspring)-1], toMutate, mutationTries)
+        for ind in population:
             # Mutation step
-            # mutate(dm, ind, n=2)
+            if isMutated(0.1):
+                mutate(dm, ind, toMutate, mutationTries)
 
         # Elimination step
         population = elimination(population, offspring, lam)
         allFitness = [x.getFitness() for x in population]
-        if i % 1 == 0:
+        if i % 10 == 0:
             print(i, "Average:", sum(allFitness)/len(allFitness))
             print(i, "Best:", min(allFitness))
 
