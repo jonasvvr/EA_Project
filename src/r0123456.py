@@ -35,16 +35,15 @@ class r0123456:
 
                 # Mutation step
                 if ea.isMutated():
-                    ea.mutate(offspring[len(offspring) - 1])
-            for ind in population:
+                    offspring[len(offspring) - 1] = ea.mutate(offspring[len(offspring) - 1])
+            for index, ind in enumerate(population):
                 # Mutation step
                 if ea.isMutated():
-                    ea.mutate(ind)
+                    population[index] = ea.mutate(ind)
 
                 # Elimination step
             population = ea.elimination(population, offspring)
             all_fitness = [x.getFitness() for x in population]
-
 
             meanObjective = sum(all_fitness) / len(all_fitness)
             bestObjective = min(all_fitness)
@@ -443,57 +442,3 @@ class evolutionaryAlgorithm:
 sys.setrecursionlimit(100000)
 ea = r0123456()
 ea.optimize('tour50.csv')
-
-# # testing initialization
-# print("\nInitialization:")
-# p = initialization(distanceMatrix, 5)
-# for ind in p:
-#     print(ind.fitness, ind.path)
-#
-# # testing mutation
-# print("\nMutation:")
-# print(p[0].getFitness(), p[0].getPath())
-# p[0] = mutate(distanceMatrix, p[0], 3)
-# print(p[0].getFitness(), p[0].getPath())
-#
-# # testing elimination
-# while True:
-#     newPath = recombination(distanceMatrix, p[0].getPath(), p[1].getPath())
-#     if isValidHamiltonianCycle(distanceMatrix, newPath):
-#         break
-# newInd = hamiltonCycle(newPath, 0)
-# compute_path_fitness(newInd, distanceMatrix)
-#
-# print("\nNew individual:")
-# print(newInd.getFitness(), newInd.getPath())
-# afterElimination = elimination(distanceMatrix, p, [newInd], 5)
-#
-# print("\nElimination:")
-# for ind in afterElimination:
-#     print(ind.fitness, ind.path)
-
-# sys.setrecursionlimit(100000)
-
-# for i in range(0,10000):
-#     start1 = rn.randint(0, len(distanceMatrix) - 1)
-#     possibleIndices1 = set(range(0, len(distanceMatrix)))
-#     possibleIndices1.remove(start1)
-#     randomCycle1 = createRandomCycle(start1, start1, distanceMatrix, possibleIndices1, {})
-#
-#     start2 = rn.randint(0, len(distanceMatrix) - 1)
-#     possibleIndices2 = set(range(0, len(distanceMatrix)))
-#     possibleIndices2.remove(start2)
-#     randomCycle2 = createRandomCycle(start2, start2, distanceMatrix, possibleIndices2, {})
-#     newCycle = recombination(distanceMatrix, randomCycle1, randomCycle2)
-
-
-# path1 = [28, 25, 44, 47, 41, 19, 24, 6, 30, 31, 0, 18, 16, 17, 48, 20, 2, 37, 7, 13, 11, 39, 3, 40, 35, 22, 9, 27, 32, 8, 4, 42, 5, 34, 36, 10, 14, 1, 15, 38, 43, 49, 21, 45, 33, 26, 46, 29, 12, 23]
-# path2 = [49, 14, 16, 18, 34, 41, 29, 7, 32, 42, 37, 5, 12, 24, 39, 33, 26, 2, 21, 31, 43, 27, 45, 47, 9, 46, 23, 38, 44, 30, 8, 22, 40, 17, 1, 11, 6, 4, 19, 10, 13, 15, 36, 48, 0, 20, 28, 35, 25, 3]
-# print(isValidHamiltonianCycle(distanceMatrix, path2))
-# print(isValidHamiltonianCycle(distanceMatrix, path1))
-# result = findAllSubsequences(path1, path2)
-# newpath = recombination(distanceMatrix, path1, path2)
-# print(result)
-# print(newpath)
-# print(len(newpath))
-# print(isValidHamiltonianCycle(distanceMatrix, newpath))
