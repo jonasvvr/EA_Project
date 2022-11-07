@@ -13,13 +13,13 @@ class r0123456:
         self.reporter = Reporter.Reporter(self.__class__.__name__)
 
     # The evolutionary algorithm's main loop
-    def optimize(self, filename):
+    def optimize(self, filename, lam=100, mu=100, its=10000, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
         # Read distance matrix from file.
         file = open(filename)
         distance_matrix = np.loadtxt(file, delimiter=",")
         file.close()
 
-        ea = evolutionaryAlgorithm(distance_matrix)
+        ea = evolutionaryAlgorithm(distance_matrix, lam, mu, its, to_mutate, mutation_tries, k, alph)
 
         population = ea.initialization()
         for i in range(0, ea.its):
@@ -68,7 +68,7 @@ class r0123456:
 
 class evolutionaryAlgorithm:
 
-    def __init__(self, dm, lam=100, mu=100, its=10000, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
+    def __init__(self, dm, lam, mu, its, to_mutate, mutation_tries, k, alph):
         self.lam = lam
         self.mu = mu
         self.its = its
@@ -277,5 +277,4 @@ class evolutionaryAlgorithm:
 
 sys.setrecursionlimit(100000)
 ea = r0123456()
-
 ea.optimize('./data/tour50.csv')
