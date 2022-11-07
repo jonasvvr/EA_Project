@@ -5,12 +5,12 @@ import numpy as np
 from r0123456 import evolutionaryAlgorithm
 from hamilton_cycle import hamiltonCycle
 
-
 file = open('tour50.csv')
 distanceMatrix = np.loadtxt(file, delimiter=",")
 file.close()
 
 ea = evolutionaryAlgorithm(distanceMatrix)
+
 
 class TestEA(unittest.TestCase):
 

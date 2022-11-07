@@ -21,7 +21,7 @@ class r0123456:
 
         ea = evolutionaryAlgorithm(distance_matrix)
 
-        population = ea.initialization(ea.lam)
+        population = ea.initialization()
         for i in range(0, ea.its):
             offspring = []
             for j in range(0, ea.mu):
@@ -78,25 +78,23 @@ class evolutionaryAlgorithm:
         self.alph = 0.05
         self.dm = dm
 
-    def initialization(self, lam=100):
+    def initialization(self):
         """
         Creates a population of random individual solutions (path and
         fitness of the path). Every individual solution is an object
         of class hamiltonCycle (from hamilton_cycle.py).
 
-        :param lam: number of individuals to create in population
         :return: list of random lam individual solutions
         :raises: Exception when a bad hamiltonian path has been created
         """
-
         population = []
-        for i in range(0, lam):
+        for _ in range(0, self.lam):
             # get a hamilton cycle as a path
             start = rn.randint(0, len(self.dm) - 1)
             possibleIndices = set(range(0, len(self.dm)))
             possibleIndices.remove(start)
             individualPath = createRandomCycle(self.dm, start, start, possibleIndices, {})
-            if not  isValidHamiltonianCycle(self.dm, individualPath):
+            if not isValidHamiltonianCycle(self.dm, individualPath):
                 raise Exception("The returned path was not an HamiltonianCycle")
             individual = hamiltonCycle(individualPath)
             self.compute_path_fitness(individual)
@@ -210,7 +208,7 @@ class evolutionaryAlgorithm:
         """
 
         path = individual.getPath()
-        for t in range(0, self.mutation_tries):
+        for _ in range(0, self.mutation_tries):
             # list containing indexes to swap
             toSwap = []
             for i in range(self.to_mutate):
@@ -279,4 +277,4 @@ class evolutionaryAlgorithm:
 
 sys.setrecursionlimit(100000)
 ea = r0123456()
-ea.optimize('tour50.csv')
+ea.optimize('./data/tour50.csv')
