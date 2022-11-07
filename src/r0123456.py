@@ -68,14 +68,14 @@ class r0123456:
 
 class evolutionaryAlgorithm:
 
-    def __init__(self, dm):
-        self.lam = 100
-        self.mu = 100
-        self.its = 10000
-        self.to_mutate = 3
-        self.mutation_tries = 20
-        self.k = 5
-        self.alph = 0.05
+    def __init__(self, dm, lam=100, mu=100, its=10000, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
+        self.lam = lam
+        self.mu = mu
+        self.its = its
+        self.to_mutate = to_mutate
+        self.mutation_tries = mutation_tries
+        self.k = k
+        self.alph = alph
         self.dm = dm
 
     def initialization(self):
@@ -277,4 +277,5 @@ class evolutionaryAlgorithm:
 
 sys.setrecursionlimit(100000)
 ea = r0123456()
+
 ea.optimize('./data/tour50.csv')
