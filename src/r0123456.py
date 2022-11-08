@@ -4,7 +4,6 @@ import random as rn
 import numpy as np
 import Reporter
 from hamilton_cycle import hamiltonCycle, findAllSubsequences, createRandomCycle, isValidHamiltonianCycle
-import testFileNumba
 
 
 # Modify the class name to match your student number.
@@ -342,4 +341,4 @@ class evolutionaryAlgorithm:
 
 sys.setrecursionlimit(100000)
 ea = r0123456()
-ea.optimize('tour1000.csv')
+ea.optimize('./data/tour50.csv')
