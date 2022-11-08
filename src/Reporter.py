@@ -12,6 +12,8 @@ class Reporter:
         self.delimiter = ','
         self.startTime = time.time()
         self.writingTime = 0
+        self.bestObjectiveList = []
+        self.iterationsList = []
         outFile = open(self.filename, "w")
         outFile.write("# Student number: " + filename + "\n")
         outFile.write("# Iteration, Elapsed time, Mean value, Best value, Cycle\n")
