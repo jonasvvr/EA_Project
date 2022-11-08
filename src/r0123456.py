@@ -13,7 +13,7 @@ class r0123456:
         self.reporter = Reporter.Reporter(self.__class__.__name__)
 
     # The evolutionary algorithm's main loop
-    def optimize(self, filename, lam=100, mu=100, its=110, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
+    def optimize(self, filename, lam=100, mu=100, its=5000, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
         self.reporter.bestObjectiveList.clear()
         self.reporter.iterationsList.clear()
 
