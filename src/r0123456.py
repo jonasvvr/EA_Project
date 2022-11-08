@@ -4,6 +4,7 @@ import random as rn
 import numpy as np
 import Reporter
 from hamilton_cycle import hamiltonCycle, findAllSubsequences, createRandomCycle, isValidHamiltonianCycle
+import testFileNumba
 
 
 # Modify the class name to match your student number.
@@ -273,8 +274,72 @@ class evolutionaryAlgorithm:
 
         return newPopulation
 
+    def makeSameSize(self, allSS):
+        allSizes = set([len(x) for x in allSS])
+        if len(allSS) > 1:
+            l = max(allSizes)
+            for SS in allSS:
+                if len(SS) < l:
+                    for i in range(0, l - len(SS)):
+                        SS.insert(1, 0)
+        return allSS
+
+    def recombinationNumba(self, ind1, ind2):
+        """
+        Finds all the common subsequences of two paths and creates a new Hamiltonian Cycle containing said subsequences.
+
+        It starts by removing all elements of the common subsequences (.1)
+        and it adds the first element of each subsequences(.2). These newly
+        added elements are used as a reference to the full subsequence
+        which is used as key for the subsequence-dictionary.
+
+        The cycle algorithm is able to used the dictionary to create full cycles with the subsequences.(.3)
+        After the cycles are found, the element representing the subsequence gets replaced by the subsequence.(.4)
+
+        :param ind1: Parent one for recombination
+        :param ind2: Parent two for recombination
+        :return: A new Hamiltionian cycle containing all the common subsequences
+        """
+        path1 = ind1.getPath()
+        path2 = ind2.getPath()
+        while True:
+            allSS = findAllSubsequences(path1, path2)
+            possibleIndices = set(range(0, len(self.dm)))
+            SS_dict = {}
+            reprSS = []
+            reprSS.append(-1)
+
+            # (.1)
+            for SS in allSS:
+                for x in SS:
+                    if not x == -1:
+                        possibleIndices.remove(x)
+                # (.2)
+                possibleIndices.add(SS[0])
+                reprSS.append(SS[0])
+                SS_dict[SS[0]] = SS
+
+            reprSS = np.array(reprSS)
+            allSS = self.makeSameSize(allSS)
+            allSS = np.array(allSS)
+            start = rn.choice(tuple(possibleIndices))  # (.3)
+            possibleIndices.remove(start)
+            pathOffspring = testFileNumba.createRandomCycle(self.dm, start, start, possibleIndices, allSS, reprSS)
+
+            # (.4)
+            for key in SS_dict:
+                i = pathOffspring.index(key)
+                for x in SS_dict[key]:
+                    if not key == x:
+                        pathOffspring.insert(i + 1, x)
+                    i += 1
+
+            if isValidHamiltonianCycle(self.dm, pathOffspring):
+                individual = hamiltonCycle(pathOffspring)
+                self.compute_path_fitness(individual)
+                return individual
 
 
 sys.setrecursionlimit(100000)
 ea = r0123456()
-ea.optimize('./data/tour50.csv')
+ea.optimize('tour1000.csv')
