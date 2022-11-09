@@ -4,7 +4,6 @@ import random as rn
 import numpy as np
 import Reporter
 from hamilton_cycle import hamiltonCycle, findAllSubsequences, createRandomCycle, isValidHamiltonianCycle
-import time
 
 
 # Modify the class name to match your student number.
@@ -14,7 +13,10 @@ class r0123456:
         self.reporter = Reporter.Reporter(self.__class__.__name__)
 
     # The evolutionary algorithm's main loop
-    def optimize(self, filename, lam=100, mu=100, its=10000, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
+    def optimize(self, filename, lam=100, mu=100, its=5000, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
+        self.reporter.bestObjectiveList.clear()
+        self.reporter.iterationsList.clear()
+
         # Read distance matrix from file.
         file = open(filename)
         distance_matrix = np.loadtxt(file, delimiter=",")
@@ -52,6 +54,9 @@ class r0123456:
             if i % 100 == 0:
                 print(i, "Average:", meanObjective)
                 print(i, "Best:", bestObjective)
+                print('--------------------------------')
+                self.reporter.iterationsList.append(i)
+                self.reporter.bestObjectiveList.append(bestObjective)
 
             # Call the reporter with:
             #  - the mean objective function value of the population
@@ -274,5 +279,5 @@ class evolutionaryAlgorithm:
 
 sys.setrecursionlimit(100000)
 ea = r0123456()
-ea.optimize('tour1000.csv')
+# ea.optimize('tour1000.csv')
 

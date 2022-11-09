@@ -1,3 +1,5 @@
+import time
+
 import plots
 from r0123456 import r0123456
 
@@ -68,7 +70,12 @@ def plot_alpha():
 
 
 plot_lambda()
+time.sleep(2)
 plot_alpha()
+time.sleep(2)
 plot_k()
+time.sleep(2)
 plot_mutation_tries()
+time.sleep(2)
 plot_to_mutate()
+time.sleep(2)
