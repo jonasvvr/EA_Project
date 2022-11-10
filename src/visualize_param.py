@@ -69,13 +69,25 @@ def plot_alpha():
     g4.commit(x_label='iterations', y_label='objective_value')
 
 
-plot_lambda()
-time.sleep(2)
-plot_alpha()
-time.sleep(2)
-plot_k()
-time.sleep(2)
-plot_mutation_tries()
-time.sleep(2)
-plot_to_mutate()
-time.sleep(2)
+def plot_convergence_graph():
+    g5  = plots.Graph('convergence_graph')
+    ea.optimize('tour50.csv')
+    obj_value = ea.reporter.bestObjectiveList
+    mean_obj_value = ea.reporter.meanObjectiveList
+    timestamps = ea.reporter.timestampList
+    g5.addSeries('best objective value', timestamps, obj_value)
+    g5.addSeries('mean objective value', timestamps, mean_obj_value)
+    g5.commit(x_label='time (in sec)', y_label='objective_value')
+
+
+# plot_lambda()
+# time.sleep(2)
+# plot_alpha()
+# time.sleep(2)
+# plot_k()
+# time.sleep(2)
+# plot_mutation_tries()
+# time.sleep(2)
+# plot_to_mutate()
+# time.sleep(2)
+plot_convergence_graph()

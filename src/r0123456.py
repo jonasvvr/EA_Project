@@ -13,9 +13,11 @@ class r0123456:
         self.reporter = Reporter.Reporter(self.__class__.__name__)
 
     # The evolutionary algorithm's main loop
-    def optimize(self, filename, lam=100, mu=100, its=5000, to_mutate=3, mutation_tries=20, k=5, alph=0.05):
+    def optimize(self, filename, lam=100, mu=100, its=5000, to_mutate=3, mutation_tries=20, k=3, alph=0.05):
         self.reporter.bestObjectiveList.clear()
         self.reporter.iterationsList.clear()
+        self.reporter.meanObjectiveList.clear()
+        self.reporter.timestampList.clear()
 
         # Read distance matrix from file.
         file = open(filename)
@@ -48,15 +50,21 @@ class r0123456:
 
             meanObjective = sum(all_fitness) / len(all_fitness)
             bestObjective = min(all_fitness)
-            # bestSolution = population[all_fitness.index(bestObjective)].getPath() TODO
-            bestSolution = np.array([1, 2, 3, 4])
+            bestSolution = population[all_fitness.index(bestObjective)].getPath()
 
             if i % 100 == 0:
                 print(i, "Average:", meanObjective)
                 print(i, "Best:", bestObjective)
                 print('--------------------------------')
+                timestamp = self.reporter.start - self.reporter.startTime
                 self.reporter.iterationsList.append(i)
+                self.reporter.meanObjectiveList.append(meanObjective)
                 self.reporter.bestObjectiveList.append(bestObjective)
+
+                if i != 0:
+                    self.reporter.timestampList.append(timestamp)
+                else:
+                    self.reporter.timestampList.append(0)
 
             # Call the reporter with:
             #  - the mean objective function value of the population
