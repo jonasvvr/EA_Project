@@ -2,6 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 ASPECT_RATIO_SIZEUP = 3
@@ -70,11 +71,17 @@ class Graph(Diagram):
         self.series[name][0].extend(xs)
         self.series[name][1].extend(ys)
 
+    def add1DSeries(self, name:str, xs:list):
+        if name not in self.series:
+            self.series[name] = ([], [])
+        self.series[name][0].extend(xs)
+        self.series[name][1].extend(np.zeros_like(xs))
+
     def commit(self, aspect_ratio=(4, 3), x_label="", y_label="",
                do_points=True, save_dont_display=True,
                grid_linewidth=1, curve_linewidth=1,
                x_lims=None, y_lims=None,
-               fig: plt.Figure = None, main_ax: plt.Axes = None):
+               fig: plt.Figure = None, main_ax: plt.Axes = None, line=True):
         # Figure stuff
         # styles = {"r.-", "g.-"}
         colours = getColours()
@@ -86,8 +93,13 @@ class Graph(Diagram):
 
         style = ".-" if do_points else "-"
 
-        for name, samples in self.series.items():
-            main_ax.plot(samples[0], samples[1], style, c=colours.pop(0), label=name, linewidth=curve_linewidth)
+
+        if line:
+            for name, samples in self.series.items():
+                main_ax.plot(samples[0], samples[1], style, c=colours.pop(0), label=name, linewidth=curve_linewidth)
+        else:
+            for name, samples in self.series.items():
+                main_ax.plot(samples[0], samples[1], '.', c=colours.pop(0), label=name, markersize=15)
 
         if x_label:
             main_ax.set_xlabel(x_label)
@@ -106,6 +118,30 @@ class Graph(Diagram):
             Diagram.safeFigureWrite(self.name, ".pdf", fig)
         else:
             show_figure(fig)
+
+    def clear(self):
+        self.series = dict()
+
+    def loadFromFile(self, path: Path):
+        if not path.is_file() or not path.suffix == ".json":
+            raise ValueError(f"Path is not a valid JSON path: {path.to_posix()}")
+
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+
+        if len(set(data.keys())) != len(list(data.keys())):
+            raise ValueError("Family name must be unique.")
+
+        self.clear()
+        for k, v in data.items():
+            if not isinstance(v, list) or not len(v) == 2:
+                raise ValueError("Series must be two-tuple/two-arrays.")
+
+            xs, ys = v
+            if not isinstance(xs, list) or not isinstance(ys, list) or not len(xs) == len(ys):
+                raise ValueError(f"The x and y data must be sequences of equal length. {len(xs)} {len(ys)}")
+
+            self.addSeries(k, xs, ys)
 
 
 def show_figure(fig: plt.Figure):

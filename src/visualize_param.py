@@ -5,6 +5,7 @@ from r0123456 import r0123456
 
 ea = r0123456()
 
+
 def plot_lambda():
     values = [50, 100, 150, 200]
 
@@ -16,6 +17,7 @@ def plot_lambda():
         g.addSeries(f'lambda={val}', iters, obj_value)
 
     g.commit(x_label='iterations', y_label='objective_value')
+
 
 def plot_to_mutate():
     values = [1, 3, 5, 7]
@@ -70,7 +72,7 @@ def plot_alpha():
 
 
 def plot_convergence_graph():
-    g5  = plots.Graph('convergence_graph')
+    g5 = plots.Graph('convergence_graph')
     ea.optimize('tour50.csv')
     obj_value = ea.reporter.bestObjectiveList
     mean_obj_value = ea.reporter.meanObjectiveList
@@ -80,14 +82,15 @@ def plot_convergence_graph():
     g5.commit(x_label='time (in sec)', y_label='objective_value')
 
 
-# plot_lambda()
-# time.sleep(2)
-# plot_alpha()
-# time.sleep(2)
-# plot_k()
-# time.sleep(2)
-# plot_mutation_tries()
-# time.sleep(2)
-# plot_to_mutate()
-# time.sleep(2)
-plot_convergence_graph()
+def plot_variation():
+    g6 = plots.Graph('variation_graph')
+    best_obj = []
+    for _ in range(15):
+        ea.optimize('tour50.csv')
+        bestObjective = ea.reporter.bestObjectiveList[-1]
+        best_obj.append(bestObjective)
+    g6.add1DSeries('objective value', best_obj)
+    g6.commit(x_label='objective_value', line=False)
+
+
+# plot_variation()
